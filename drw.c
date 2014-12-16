@@ -168,7 +168,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 	if(drw->font->set)
 		XmbDrawString(drw->dpy, drw->drawable, drw->font->set, drw->gc, tx, ty, buf, len);
 	else
-		XDrawString(drw->dpy, drw->drawable, drw->gc, tx, ty, buf, len);
+                XDrawString(drw->dpy, drw->drawable, drw->gc, tx, ty, buf, len);
 }
 
 void
