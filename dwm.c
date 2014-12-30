@@ -39,6 +39,7 @@
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
+#include <X11/Xft/Xft.h>
 
 #include "drw.h"
 #include "util.h"
@@ -632,7 +633,7 @@ clientmessage(XEvent *e) {
 			XSelectInput(dpy, c->win, StructureNotifyMask | PropertyChangeMask | ResizeRedirectMask);
 			XReparentWindow(dpy, c->win, systray->win, 0, 0);
 			/* use parents background color */
-			swa.background_pixel  = scheme[SchemeNorm].bg->rgb;
+			swa.background_pixel  = scheme[SchemeNorm].bg->pix;
 			XChangeWindowAttributes(dpy, c->win, CWBackPixel, &swa);
 			sendevent(c->win, netatom[Xembed], StructureNotifyMask, CurrentTime, XEMBED_EMBEDDED_NOTIFY, 0 , systray->win, XEMBED_EMBEDDED_VERSION);
 			/* FIXME not sure if I have to send these events, too */
@@ -956,7 +957,7 @@ focus(Client *c) {
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, True);
-		XSetWindowBorder(dpy, c->win, scheme[SchemeSel].border->rgb);
+		XSetWindowBorder(dpy, c->win, scheme[SchemeSel].border->pix);
 		setfocus(c);
 	}
 	else {
@@ -1233,7 +1234,7 @@ manage(Window w, XWindowAttributes *wa) {
 
 	wc.border_width = c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
-	XSetWindowBorder(dpy, w, scheme[SchemeNorm].border->rgb);
+	XSetWindowBorder(dpy, w, scheme[SchemeNorm].border->pix);
 	configure(c); /* propagates border_width, if size doesn't change */
 	updatewindowtype(c);
 	updatesizehints(c);
@@ -1766,7 +1767,7 @@ setup(void) {
 	/* init screen */
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
-	fnt = drw_font_create(dpy, font);
+	fnt = drw_font_create(dpy, screen, font);
 	sw = DisplayWidth(dpy, screen);
 	sh = DisplayHeight(dpy, screen);
 	bh = fnt->h + 2;
@@ -2000,7 +2001,7 @@ unfocus(Client *c, Bool setfocus) {
 	if(!c)
 		return;
 	grabbuttons(c, False);
-	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm].border->rgb);
+	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm].border->pix);
 	if(setfocus) {
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
@@ -2328,10 +2329,10 @@ updatesystray(void) {
 		/* init systray */
 		if(!(systray = (Systray *)calloc(1, sizeof(Systray))))
 			die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
-		systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel].bg->rgb);
+		systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel].bg->pix);
 		wa.event_mask        = ButtonPressMask | ExposureMask;
 		wa.override_redirect = True;
-		wa.background_pixel  = scheme[SchemeNorm].bg->rgb;
+		wa.background_pixel  = scheme[SchemeNorm].bg->pix;
 		XSelectInput(dpy, systray->win, SubstructureNotifyMask);
 		XChangeProperty(dpy, systray->win, netatom[NetSystemTrayOrientation], XA_CARDINAL, 32,
 				PropModeReplace, (unsigned char *)&systrayorientation, 1);
@@ -2351,7 +2352,7 @@ updatesystray(void) {
 	}
 	for(w = 0, i = systray->icons; i; i = i->next) {
 		/* make sure the background color stays the same */
-		wa.background_pixel  = scheme[SchemeNorm].bg->rgb;
+		wa.background_pixel  = scheme[SchemeNorm].bg->pix;
 		XChangeWindowAttributes(dpy, i->win, CWBackPixel, &wa);
 		XMapRaised(dpy, i->win);
 		w += systrayspacing;
@@ -2370,7 +2371,7 @@ updatesystray(void) {
 	XMapWindow(dpy, systray->win);
 	XMapSubwindows(dpy, systray->win);
 	/* redraw background */
-	XSetForeground(dpy, drw->gc, scheme[SchemeNorm].bg->rgb);
+	XSetForeground(dpy, drw->gc, scheme[SchemeNorm].bg->pix);
 	XFillRectangle(dpy, systray->win, drw->gc, 0, 0, w, bh);
 	XSync(dpy, False);
 }

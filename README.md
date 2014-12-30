@@ -5,5 +5,6 @@ Features/Patches
 * Systray
 * Autostart
 * Betterborder
+* Xft
 
 

@@ -1,5 +1,5 @@
 
-static const char font[]                        = "-*-terminus-medium-r-*-*-14-*-*-*-*-*-*-*";
+static const char font[]                        = "Droid Sans Mono Slashed:size=10";
 static const char normbordercolor[]             = "#444444";
 static const char normbgcolor[]                 = "#2c001e";
 static const char normfgcolor[]                 = "#bbbbbb";
