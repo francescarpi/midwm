@@ -1,10 +1,10 @@
 
 static const char font[]                        = "Droid Sans Mono Slashed:size=10";
 static const char normbordercolor[]             = "#444444";
-static const char normbgcolor[]                 = "#2c001e";
+static const char normbgcolor[]                 = "#000000";
 static const char normfgcolor[]                 = "#bbbbbb";
-static const char selbordercolor[]              = "#dd4814";
-static const char selbgcolor[]                  = "#dd4814";
+static const char selbordercolor[]              = "#37619b";
+static const char selbgcolor[]                  = "#37619b";
 static const char selfgcolor[]                  = "#eeeeee";
 static const unsigned int borderpx              = 1;            /* border pixel of windows */
 static const unsigned int snap                  = 32;           /* snap pixel */
@@ -20,6 +20,7 @@ static const char *tags[] = { "1", "2", "3", "4", "5" };
 static const Rule rules[] = {
 	/* class        instance    title       tags mask     isfloating   monitor */
         {"galculator",  NULL,       NULL,       1 << 8,       True,        -1},
+        {"conky",       NULL,       NULL,       1 << 8,       True,        -1},
 };
 
 /* layout(s) */
@@ -46,7 +47,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", font, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-fn", "Droid Sans Mono-9", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
 static const char *termcmd[]  = { "terminator", NULL };
 
 static Key keys[] = {

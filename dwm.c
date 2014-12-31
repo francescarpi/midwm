@@ -849,57 +849,65 @@ dirtomon(int dir) {
 
 void
 drawbar(Monitor *m) {
-	int x, xx, w;
-	unsigned int i, occ = 0, urg = 0;
-	Client *c;
+    int x, xx, w;
+    unsigned int i, occ = 0, urg = 0;
+    Client *c;
 
-	resizebarwin(m);
-	for(c = m->clients; c; c = c->next) {
-		occ |= c->tags;
-		if(c->isurgent)
-			urg |= c->tags;
-	}
-	x = 0;
-	for(i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
-		drw_setscheme(drw, m->tagset[m->seltags] & 1 << i ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, tags[i], urg & 1 << i);
-		drw_rect(drw, x, 0, w, bh, m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-		           occ & 1 << i, urg & 1 << i);
-		x += w;
-	}
-	w = blw = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, &scheme[SchemeNorm]);
-	drw_text(drw, x, 0, w, bh, m->ltsymbol, 0);
-	x += w;
-	xx = x;
-	if(m == selmon) { /* status is only drawn on selected monitor */
-		w = TEXTW(stext);
-		x = m->ww - w;
-		if(x < xx) {
-			x = xx;
-			w = m->ww - xx;
-		}
-		drw_text(drw, x, 0, w, bh, stext, 0);
-	}
-	else
-		x = m->ww;
-	if(showsystray && m == systraytomon(m)) {
-		x -= getsystraywidth();
-	}
-	if((w = x - xx) > bh) {
-		x = xx;
-		if(m->sel) {
-			drw_setscheme(drw, m == selmon ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, m->sel->name, 0);
-			drw_rect(drw, x, 0, w, bh, m->sel->isfixed, m->sel->isfloating, 0);
-		}
-		else {
-			drw_setscheme(drw, &scheme[SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, NULL, 0);
-		}
-	}
-	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+    resizebarwin(m);
+    for(c = m->clients; c; c = c->next) {
+        occ |= c->tags;
+        if(c->isurgent)
+            urg |= c->tags;
+    }
+    x = 0;
+    for(i = 0; i < LENGTH(tags); i++) {
+        w = TEXTW(tags[i]);
+        drw_setscheme(drw, m->tagset[m->seltags] & 1 << i ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
+        drw_text(drw, x, 0, w, bh, tags[i], urg & 1 << i);
+        drw_rect(drw, x, 0, w, bh, m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+                occ & 1 << i, urg & 1 << i);
+        x += w;
+    }
+    w = blw = TEXTW(m->ltsymbol);
+    drw_setscheme(drw, &scheme[SchemeNorm]);
+    drw_text(drw, x, 0, w, bh, m->ltsymbol, 0);
+    x += w;
+    xx = x;
+
+    if(m == selmon) { /* status is only drawn on selected monitor */
+        w = TEXTW(stext);
+        x = m->ww - w;
+        if(x < xx) {
+            x = xx;
+            w = m->ww - xx;
+        }
+
+        if(showsystray && m == systraytomon(m)) {
+            x -= getsystraywidth();
+        }
+
+        drw_text(drw, x, 0, w, bh, stext, 0);
+    }
+    else
+        x = m->ww;
+    
+    if(showsystray && m == systraytomon(m)) {
+        x -= getsystraywidth();
+    }
+
+    if((w = x - xx) > bh) {
+        x = xx;
+        if(m->sel) {
+            drw_setscheme(drw, m == selmon ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
+            drw_text(drw, x, 0, w, bh, m->sel->name, 0);
+            drw_rect(drw, x, 0, w, bh, m->sel->isfixed, m->sel->isfloating, 0);
+        }
+        else {
+            drw_setscheme(drw, &scheme[SchemeNorm]);
+            drw_text(drw, x, 0, w, bh, NULL, 0);
+        }
+    }
+    drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
 
 void
@@ -2252,39 +2260,39 @@ updatesizehints(Client *c) {
 
 void
 updatetitle(Client *c) {
-	if(!gettextprop(c->win, netatom[NetWMName], c->name, sizeof c->name))
-		gettextprop(c->win, XA_WM_NAME, c->name, sizeof c->name);
-	if(c->name[0] == '\0') /* hack to mark broken clients */
-		strcpy(c->name, broken);
+    if(!gettextprop(c->win, netatom[NetWMName], c->name, sizeof c->name))
+        gettextprop(c->win, XA_WM_NAME, c->name, sizeof c->name);
+    if(c->name[0] == '\0') /* hack to mark broken clients */
+        strcpy(c->name, broken);
 }
 
 void
 updatestatus(void) {
-	if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
-		strcpy(stext, "dwm-"VERSION);
-	drawbar(selmon);
+    if(!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+        strcpy(stext, "dwm-"VERSION);
+    drawbar(selmon);
 }
 
 void
 updatesystrayicongeom(Client *i, int w, int h) {
-	if(i) {
-		i->h = bh;
-		if(w == h)
-			i->w = bh;
-		else if(h == bh)
-			i->w = w;
-		else
-			i->w = (int) ((float)bh * ((float)w / (float)h));
-		applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
-		/* force icons into the systray dimenons if they don't want to */
-		if(i->h > bh) {
-			if(i->w == i->h)
-				i->w = bh;
-			else
-				i->w = (int) ((float)bh * ((float)i->w / (float)i->h));
-			i->h = bh;
-		}
-	}
+    if(i) {
+        i->h = bh;
+        if(w == h)
+            i->w = bh;
+        else if(h == bh)
+            i->w = w;
+        else
+            i->w = (int) ((float)bh * ((float)w / (float)h));
+        applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
+        /* force icons into the systray dimenons if they don't want to */
+        if(i->h > bh) {
+            if(i->w == i->h)
+                i->w = bh;
+            else
+                i->w = (int) ((float)bh * ((float)i->w / (float)i->h));
+            i->h = bh;
+        }
+    }
 }
 
 void
