@@ -15,6 +15,17 @@ static const Bool showsystray                   = True;         /* False means n
 static const Bool showbar                       = True;         /* False means no bar */
 static const Bool topbar                        = True;         /* False means bottom bar */
 
+#define NUMCOLORS 7
+static const unsigned long colors[] = {
+    0x54ebff,   // \x01
+    0xdb6794,   // \x02
+    0xef9c3a,   // \x03
+    0xa4bc74,   // \x04
+    0x99FF99,   // Good \x05
+    0xFF6600,   // Warning \x06
+    0xC63333,   // Caution \x07
+};
+
 static const char *tags[] = { "1", "2", "3", "4", "5" };
 
 static const Rule rules[] = {

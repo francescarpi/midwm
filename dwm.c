@@ -270,6 +270,7 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
+/* static void parsestatus(char *text, unsigned long *color_queue, char tokens[][256]); */
 
 /* variables */
 static Systray *systray = NULL;
@@ -307,6 +308,8 @@ static Drw *drw;
 static Fnt *fnt;
 static Monitor *mons, *selmon;
 static Window root;
+/* static unsigned long color_queue[50]; */
+/* static char tokens[256][256]; */
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -324,7 +327,6 @@ struct Pertag {
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
-/* function implementations */
 void
 applyrules(Client *c) {
     const char *class, *instance;
@@ -861,6 +863,47 @@ monoclecounter(Monitor *m) {
         snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d/%d]", s, a);
 }
 
+/* void */
+/* parsestatus(char *text, unsigned long *color_queue, char tokens[][256]) { */
+/*  */
+/*   char delim[NUMCOLORS+1]; */
+/*  */
+/*   #<{(| Thanks to http://stackoverflow.com/a/24931903/1612432 |)}># */
+/*   for (int i = 0; i < NUMCOLORS; ++i) */
+/*       delim[i] = i + 1; */
+/*   #<{(| Terminates as string |)}># */
+/*   delim[NUMCOLORS] = '\0'; */
+/*  */
+/*   char *copy = strdup(text); */
+/*   char *res = strtok(copy, delim); */
+/*   if (!text[res - copy + strlen(res)]){ */
+/*     // Status already parsed */
+/*     return; */
+/*   } */
+/*  */
+/*   char cleanBuf[strlen(text)]; */
+/*   cleanBuf[0] = '\0'; */
+/*   strcpy(tokens[0], res); */
+/*   strcat(cleanBuf, res); */
+/*   int i = 1; */
+/*  */
+/*   while (res) { */
+/*     #<{(| Figure out what delimiter was used |)}># */
+/*     // Thanks to http://stackoverflow.com/a/12460511/1612432 */
+/*     int deli = text[res - copy + strlen(res)] - 1; */
+/*     color_queue[i-1] = colors[deli]; */
+/*     res = strtok(0, delim); */
+/*     if (res){ */
+/*       strcpy(tokens[i++], res); */
+/*       strcat(cleanBuf, res); */
+/*     } */
+/*   } */
+/*   free(copy); */
+/*   strncpy(text, cleanBuf, strlen(cleanBuf)); */
+/*   text[strlen(cleanBuf)] = '\0'; */
+/*   color_queue[i] = '\0'; */
+/* } */
+
 void
 drawbar(Monitor *m) {
     int x, xx, w;
@@ -874,6 +917,7 @@ drawbar(Monitor *m) {
             urg |= c->tags;
     }
 
+    // Tags...
     x = 0;
     for(i = 0; i < LENGTH(tags); i++) {
         w = TEXTW(tags[i]);
@@ -883,6 +927,8 @@ drawbar(Monitor *m) {
                 occ & 1 << i, urg & 1 << i);
         x += w;
     }
+
+    // Tag simbol...
     w = blw = TEXTW(m->ltsymbol);
     drw_setscheme(drw, &scheme[SchemeNorm]);
     drw_text(drw, x, 0, w, bh, m->ltsymbol, 0);
@@ -892,7 +938,10 @@ drawbar(Monitor *m) {
     if(m->lt[m->sellt]->arrange == monocle)
         monoclecounter(m);
 
+    // Status...
     if(m == selmon) { /* status is only drawn on selected monitor */
+	    /* parsestatus(stext, color_queue, tokens); */
+
         w = TEXTW(stext);
         x = m->ww - w;
         if(x < xx) {
@@ -904,7 +953,8 @@ drawbar(Monitor *m) {
             x -= getsystraywidth();
         }
 
-        drw_text(drw, x, 0, w, bh, stext, 0);
+		/* drw_colored_st(drw, x, 0, w, bh, tokens, color_queue, stext); */
+		drw_text(drw, x, 0, w, bh, stext, 0);
     }
     else
         x = m->ww;
@@ -913,6 +963,7 @@ drawbar(Monitor *m) {
         x -= getsystraywidth();
     }
 
+    // Client/app name...
     if((w = x - xx) > bh) {
         x = xx;
         if(m->sel) {
@@ -925,6 +976,7 @@ drawbar(Monitor *m) {
             drw_text(drw, x, 0, w, bh, NULL, 0);
         }
     }
+
     drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
 
@@ -2565,3 +2617,4 @@ main(int argc, char *argv[]) {
     XCloseDisplay(dpy);
     return EXIT_SUCCESS;
 }
+
