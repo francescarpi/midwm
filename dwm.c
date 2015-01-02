@@ -879,10 +879,14 @@ drawbar(Monitor *m) {
         w = TEXTW(tags[i]);
         drw_setscheme(drw, m->tagset[m->seltags] & 1 << i ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
         drw_text(drw, x, 0, w, bh, tags[i], urg & 1 << i);
-        drw_rect(drw, x, 0, w, bh, m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-                occ & 1 << i, urg & 1 << i);
+
+        // Marca indicadora de si hay apps en este tag... (cuadradito)
+        drw_rect(drw, x, 0, w, bh, m == selmon && selmon->sel && selmon->sel->tags & 1 << i, occ & 1 << i, urg & 1 << i);
         x += w;
     }
+
+    if(m->lt[m->sellt]->arrange == monocle)
+        monoclecounter(m);
 
     // Tag simbol...
     w = blw = TEXTW(m->ltsymbol);
@@ -891,15 +895,12 @@ drawbar(Monitor *m) {
     x += w;
     xx = x;
 
-    if(m->lt[m->sellt]->arrange == monocle)
-        monoclecounter(m);
-
     // Status...
     if(m == selmon) { /* status is only drawn on selected monitor */
-
         w = TEXTW(stext);
         x = m->ww - w;
-        if(x < xx) {
+       
+        if(x < xx) { /* Esto es por si el status es más ancho y se solapa con el tag simbol */
             x = xx;
             w = m->ww - xx;
         }
@@ -912,10 +913,6 @@ drawbar(Monitor *m) {
     }
     else
         x = m->ww;
-
-    if(showsystray && m == systraytomon(m)) {
-        x -= getsystraywidth();
-    }
 
     // Client/app name...
     if((w = x - xx) > bh) {
