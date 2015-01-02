@@ -8,8 +8,6 @@
 #include "drw.h"
 #include "util.h"
 
-#define TEXTW(X)                (drw_font_getexts_width(drw->font, X, strlen(X)) + drw->font->h)
-
 Drw *
 drw_create(Display *dpy, int screen, Window root, unsigned int w, unsigned int h) {
 	Drw *drw = (Drw *)calloc(1, sizeof(Drw));
@@ -205,44 +203,3 @@ drw_cur_free(Drw *drw, Cur *cursor) {
 	free(cursor);
 }
 
-void
-drw_colored_st(Drw *drw, int x, int y, unsigned int w, unsigned int h, char text[][256], const unsigned long *color, const char *ptext) {
-    char buf[256];
-    int i, tx, ty, th, len, olen;
-    Extnts tex;
-
-	/* Colormap cmap; */
-	/* Visual *vis; */
-	/* XftDraw *d; */
-
-    if(!drw || !drw->scheme)
-        return;
-    XSetForeground(drw->dpy, drw->gc, drw->scheme->bg->pix);
-    XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
-    if(!text || !drw->font)
-        return;
-    olen = strlen(ptext);
-    drw_font_getexts(drw->font, ptext, olen, &tex);
-    th = drw->font->ascent + drw->font->descent;
-    ty = y + (h / 2) - (th / 2) + drw->font->ascent;
-    tx = x + (h / 2);
-    /* shorten text if necessary */
-    for(len = MIN(olen, sizeof buf); len && (tex.w > w - tex.h || w < tex.h); len--)
-        drw_font_getexts(drw->font, ptext, len, &tex);
-    if(!len)
-        return;
-    memcpy(buf, ptext, len);
-    if(len < olen)
-        for(i = len; i && i > len - 3; buf[--i] = '.');
-
-    for (int k = 0; color[k]; k++) {
-        XSetForeground(drw->dpy, drw->gc, color[k]);
-        /* if (drw->font->set) */
-        /*     XmbDrawString(drw->dpy, drw->drawable, drw->font->set, drw->gc, tx, ty, text[k], strlen(text[k])); */
-        /* else */
-            XDrawString(drw->dpy, drw->drawable, drw->gc, tx, ty, text[k], strlen(text[k]));
-        
-        tx += TEXTW(text[k]) - TEXTW("\x0");
-    }
-
-}
