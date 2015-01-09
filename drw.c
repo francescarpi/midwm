@@ -8,6 +8,8 @@
 #include "drw.h"
 #include "util.h"
 
+#define TEXTW(X)                (drw_font_getexts_width(drw->font, X, strlen(X)) + drw->font->h)
+
 Drw *
 drw_create(Display *dpy, int screen, Window root, unsigned int w, unsigned int h) {
 	Drw *drw = (Drw *)calloc(1, sizeof(Drw));
@@ -86,6 +88,31 @@ drw_clr_create(Drw *drw, const char *clrname) {
 	return clr;
 }
 
+/* Convert long color to xftcolor... */
+XftColor *
+translatecolor(Drw *drw, const char *hexcolor) {
+    XftColor *clr;
+    XRenderColor rcolor;
+	Colormap cmap;
+	Visual *vis;
+    XColor col;
+
+	cmap = DefaultColormap(drw->dpy, drw->screen);
+	vis = DefaultVisual(drw->dpy, drw->screen);
+
+    clr = (XftColor *)calloc(1, sizeof(XftColor));
+    XParseColor(drw->dpy, cmap, hexcolor, &col);
+
+    rcolor.red = col.red;
+    rcolor.green = col.green;
+    rcolor.blue = col.blue;
+
+    XftColorAllocValue(drw->dpy, vis, cmap, &rcolor, clr);
+
+    clr->pixel = col.pixel;
+    return clr;
+}
+
 void
 drw_clr_free(Clr *clr) {
 	if(clr)
@@ -122,6 +149,7 @@ void
 drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *text, int invert) {
 	char buf[256];
 	int i, tx, ty, th, len, olen;
+
 	Extnts tex;
 	Colormap cmap;
 	Visual *vis;
@@ -129,8 +157,10 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 
 	if(!drw || !drw->scheme)
 		return;
+
 	XSetForeground(drw->dpy, drw->gc, invert ? drw->scheme->fg->pix : drw->scheme->bg->pix);
 	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
+
 	if(!text || !drw->font)
 		return;
 
@@ -139,11 +169,14 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 	th = drw->font->ascent + drw->font->descent;
 	ty = y + (h / 2) - (th / 2) + drw->font->ascent;
 	tx = x + (h / 2);
+
 	/* shorten text if necessary */
 	for(len = MIN(olen, sizeof buf); len && (tex.w > w - tex.h || w < tex.h); len--)
 		drw_font_getexts(drw->font, text, len, &tex);
+
 	if(!len)
 		return;
+
 	memcpy(buf, text, len);
 	if(len < olen)
 		for(i = len; i && i > len - 3; buf[--i] = '.');
@@ -153,6 +186,50 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 	d = XftDrawCreate(drw->dpy, drw->drawable, vis, cmap);
 	XftDrawStringUtf8(d, invert ? &drw->scheme->bg->rgb : &drw->scheme->fg->rgb, drw->font->xfont, tx, ty, (XftChar8 *)buf, len);
 	XftDrawDestroy(d);
+}
+
+void
+drw_colored_st(Drw *drw, int x, int y, unsigned int w, unsigned int h, char text[][256], const char *color[], const char *ptext) {
+    char buf[256];
+    int i, tx, ty, th, len, olen;
+	Colormap cmap;
+	Visual *vis;
+	XftDraw *d;
+    Extnts tex;
+    XftColor *clr;
+
+    if(!drw || !drw->scheme)
+        return;
+    XSetForeground(drw->dpy, drw->gc, drw->scheme->bg->pix);
+    XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
+    if(!text || !drw->font)
+        return;
+    olen = strlen(ptext);
+    drw_font_getexts(drw->font, ptext, olen, &tex);
+    th = drw->font->ascent + drw->font->descent;
+    ty = y + (h / 2) - (th / 2) + drw->font->ascent;
+    tx = x + (h / 2);
+    /* shorten text if necessary */
+    for(len = MIN(olen, sizeof buf); len && (tex.w > w - tex.h || w < tex.h); len--)
+        drw_font_getexts(drw->font, ptext, len, &tex);
+    if(!len)
+        return;
+    memcpy(buf, ptext, len);
+    if(len < olen)
+        for(i = len; i && i > len - 3; buf[--i] = '.');
+
+	cmap = DefaultColormap(drw->dpy, drw->screen);
+	vis = DefaultVisual(drw->dpy, drw->screen);
+    d = XftDrawCreate(drw->dpy, drw->drawable, vis, cmap);
+
+    for (int k = 0; color[k]; k++) {
+        clr = translatecolor(drw, color[k]);
+        XftDrawStringUtf8(d, clr, drw->font->xfont, tx, ty, (XftChar8 *)text[k], strlen(text[k]));
+        tx += TEXTW(text[k]) - TEXTW("\x0");
+    }
+
+    XftDrawDestroy(d);
+    free(clr); // TODO: Revisar si aquí, o abaix...
 }
 
 void
