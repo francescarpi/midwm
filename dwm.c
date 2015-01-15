@@ -200,6 +200,7 @@ static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
 static void focusin(XEvent *e);
+static void view_adjacent(const Arg *arg);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
@@ -1069,6 +1070,28 @@ focusin(XEvent *e) { /* there are some broken focus acquiring clients */
 
     if(selmon->sel && ev->window != selmon->sel->win)
         setfocus(selmon->sel);
+}
+
+void
+view_adjacent(const Arg *arg)
+{
+    int i, curtags;
+    int seltag = 0;
+    Arg a;
+
+    curtags = selmon->tagset[selmon->seltags];
+    for(i = 0; i < LENGTH(tags); i++)
+        if(curtags & (1 << i)){
+            seltag = i;
+            break;
+        }
+
+    seltag = (seltag + arg->i) % (int)LENGTH(tags);
+    if(seltag < 0)
+        seltag += LENGTH(tags);
+
+    a.i = (1 << seltag);
+    view(&a);
 }
 
 void
